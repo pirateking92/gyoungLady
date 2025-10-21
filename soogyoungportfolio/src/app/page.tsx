@@ -1,102 +1,142 @@
 import Image from "next/image";
+import Link from "next/link";
+import { client, getHomepageDataQuery, getFeaturedProjectsQuery, urlFor } from "@/lib/sanity";
+import type { HomepageData, Project } from "@/types/sanity";
 
-export default function Home() {
+export default async function Home() {
+  // Fetch homepage data and featured projects
+  const [homepageData, featuredProjects] = await Promise.all([
+    client.fetch<HomepageData>(getHomepageDataQuery),
+    client.fetch<Project[]>(getFeaturedProjectsQuery),
+  ]);
+
   return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
-
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+    <div className="min-h-screen">
+      {/* Hero Section */}
+      <section className="container mx-auto px-6 py-20">
+        <div className="max-w-4xl mx-auto text-center">
+          {homepageData?.profilePhoto && (
+            <div className="mb-8">
+              <Image
+                src={urlFor(homepageData.profilePhoto.asset).width(200).height(200).url()}
+                alt={homepageData.profilePhoto.alt || homepageData.name}
+                width={200}
+                height={200}
+                className="rounded-full mx-auto"
+                priority
+              />
+            </div>
+          )}
+          <h1 className="text-5xl font-bold mb-4">
+            {homepageData?.name || "Art Conservator"}
+          </h1>
+          <p className="text-xl text-gray-600 mb-8">
+            {homepageData?.tagline || "Preserving art for future generations"}
+          </p>
+          <div className="flex gap-4 justify-center">
+            <Link
+              href="/projects"
+              className="px-6 py-3 bg-black text-white rounded-lg hover:bg-gray-800 transition"
+            >
+              View Projects
+            </Link>
+            <Link
+              href="/about"
+              className="px-6 py-3 border border-black rounded-lg hover:bg-gray-50 transition"
+            >
+              About Me
+            </Link>
+          </div>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
+      </section>
+
+      {/* Featured Projects Section */}
+      {featuredProjects && featuredProjects.length > 0 && (
+        <section className="bg-gray-50 py-20">
+          <div className="container mx-auto px-6">
+            <h2 className="text-3xl font-bold mb-12 text-center">
+              Featured Projects
+            </h2>
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {featuredProjects.map((project) => (
+                <Link
+                  key={project._id}
+                  href={`/projects/${project.slug.current}`}
+                  className="group"
+                >
+                  <div className="bg-white rounded-lg overflow-hidden shadow-md hover:shadow-xl transition">
+                    {project.mainImage && (
+                      <div className="aspect-[4/3] relative overflow-hidden">
+                        <Image
+                          src={urlFor(project.mainImage.asset).width(600).height(450).url()}
+                          alt={project.mainImage.alt || project.title}
+                          fill
+                          className="object-cover group-hover:scale-105 transition"
+                        />
+                      </div>
+                    )}
+                    <div className="p-6">
+                      <h3 className="text-xl font-semibold mb-2 group-hover:text-blue-600 transition">
+                        {project.title}
+                      </h3>
+                      {project.client && (
+                        <p className="text-sm text-gray-500 mb-2">
+                          {project.client}
+                        </p>
+                      )}
+                      {project.excerpt && (
+                        <p className="text-gray-600 line-clamp-3">
+                          {project.excerpt}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* Footer */}
+      <footer className="py-12 border-t">
+        <div className="container mx-auto px-6 text-center">
+          <p className="text-gray-600">
+            © {new Date().getFullYear()} {homepageData?.name || "Art Conservator Portfolio"}
+          </p>
+          {homepageData?.socialLinks && (
+            <div className="flex gap-6 justify-center mt-4">
+              {homepageData.socialLinks.linkedin && (
+                <a
+                  href={homepageData.socialLinks.linkedin}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-gray-600 hover:text-black transition"
+                >
+                  LinkedIn
+                </a>
+              )}
+              {homepageData.socialLinks.instagram && (
+                <a
+                  href={homepageData.socialLinks.instagram}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-gray-600 hover:text-black transition"
+                >
+                  Instagram
+                </a>
+              )}
+              {homepageData.email && (
+                <a
+                  href={`mailto:${homepageData.email}`}
+                  className="text-gray-600 hover:text-black transition"
+                >
+                  Contact
+                </a>
+              )}
+            </div>
+          )}
+        </div>
       </footer>
     </div>
   );
